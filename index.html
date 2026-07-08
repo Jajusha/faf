@@ -246,6 +246,17 @@ button{font-family:inherit;}
 .verdict-check{display:flex;align-items:flex-start;gap:9px;margin-top:11px;font-size:12.5px;line-height:1.4;cursor:pointer;color:var(--ink);}
 .verdict-check input{width:19px;height:19px;margin-top:1px;flex:0 0 auto;accent-color:var(--red-600);}
 
+.qty-block{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:12px 14px;margin-top:14px;}
+.qty-lbl{display:block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;}
+.qty-row{display:flex;align-items:center;gap:14px;}
+.qty-input-wrap{flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;}
+.qty-input-wrap input{flex:1;min-width:0;border:none;background:none;font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
+.qty-input-wrap input:focus{outline:none;}
+.qty-input-wrap:focus-within{border-color:var(--teal-500);}
+.qty-unit{font-size:12.5px;font-weight:700;color:var(--muted);flex:0 0 auto;}
+.qty-expected{font-size:11px;color:var(--muted);text-align:right;line-height:1.5;flex:0 0 auto;}
+.qty-expected b{font-size:13px;color:var(--ink);}
+
 .extra-row{display:flex;gap:9px;flex-wrap:wrap;}
 .extra-thumb{position:relative;width:56px;height:56px;border-radius:9px;overflow:hidden;border:1px solid var(--border);}
 .extra-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -337,6 +348,7 @@ var state = {
   itemId:null,
   tempPhoto:null,
   tempReading:null,   /* {qualidade, perfil, comprimento, colada, raw} — vem do QR real */
+  tempQtd:null,       /* quantidade que o operador diz que está a carregar (string do input) */
   extraPhotos:[],
   manualOverride:false,
   scanError:null,
@@ -352,6 +364,23 @@ function normTxt(s){ return String(s==null?"":s).toUpperCase().replace(/\s+/g,""
 function readingMatches(it, r){
   if(!it || !r) return false;
   return normTxt(r.perfil)===normTxt(it.perfil) && normTxt(r.qualidade)===normTxt(it.qualidade) && normTxt(r.comprimento)===normTxt(it.comprimento);
+}
+/* it.qtd é tipo "6 un" / "800 kg" — separa o número (esperado) da unidade. */
+function parseQtd(str){
+  var m=/^([\d.,]+)\s*(.*)$/.exec(String(str||"").trim());
+  if(!m) return {value:null, unit:""};
+  var num=parseFloat(m[1].replace(",", "."));
+  return {value:isNaN(num)?null:num, unit:(m[2]||"").trim()};
+}
+function qtyEnteredValue(){
+  if(state.tempQtd==null || state.tempQtd==="") return null;
+  var v=parseFloat(String(state.tempQtd).replace(",", "."));
+  return isNaN(v) ? null : v;
+}
+function qtyMatches(it){
+  var exp=parseQtd(it.qtd), entered=qtyEnteredValue();
+  if(exp.value==null || entered==null) return false;
+  return Math.abs(entered-exp.value)<0.001;
 }
 /* Payload real (confirmado nas 3 etiquetas do cliente): 4 linhas de texto —
    Qualidade / Perfil / Comprimento / "Colada NNNNNN". */
@@ -372,6 +401,10 @@ function applyReading(text, photoUrl){
   stopScanner();
   state.tempReading=parseLabelText(text);
   if(photoUrl!=null){ state.tempPhoto=photoUrl; }
+  if(state.tempQtd==null || state.tempQtd===""){
+    var it=findItem(state.itemId), exp=it?parseQtd(it.qtd):{value:null};
+    state.tempQtd = exp.value!=null ? String(exp.value) : "";
+  }
   state.manualOverride=false;
   state.scanError=null;
   if(navigator.vibrate){ try{ navigator.vibrate(20); }catch(e){} }
@@ -570,7 +603,7 @@ function renderListScreen(){
            '<div class="item-body">'+
              '<div class="item-top"><div class="item-artigo">'+esc(it.artigo)+'</div></div>'+
              '<div class="item-qual">'+esc(it.qualidade)+' &middot; '+esc(it.comprimento)+'</div>'+
-             '<div class="item-meta">'+esc(it.cliente)+'<br>'+esc(it.enc)+' &middot; <b>'+esc(it.destino)+'</b>'+(done?'<br>Colada registada: <b class="mono">'+esc(it.coladaLida)+'</b>':'')+'</div>'+
+             '<div class="item-meta">'+esc(it.cliente)+'<br>'+esc(it.enc)+' &middot; <b>'+esc(it.destino)+'</b>'+(done?'<br>Colada registada: <b class="mono">'+esc(it.coladaLida)+'</b> &middot; Carregado: <b class="mono">'+esc(it.qtdCarregada)+' '+esc(parseQtd(it.qtd).unit)+'</b>':'')+'</div>'+
              '<div class="item-foot">'+
                '<span class="pill '+pillCls+'">'+pillTxt+'</span>'+
                '<span class="item-qtd num">'+esc(it.qtd)+'</span>'+
@@ -599,11 +632,16 @@ window.app_backToPorta=function(){ state.screen="porta"; state.porta=null; rende
 function resetTempForItem(it){
   state.tempPhoto = it.foto || null;
   state.tempReading = it.leitura || null;
+  state.tempQtd = (it.qtdCarregada!=null) ? String(it.qtdCarregada) : null;
   state.extraPhotos = (it.extraFotos || []).slice();
   state.manualOverride = false;
   state.scanError = null;
   state.showSamples = false;
 }
+/* oninput: só guarda (sem re-render) para não perder o foco a cada tecla.
+   onchange (ao sair do campo): re-renderiza para actualizar o veredicto. */
+window.app_setQtyLocal=function(v){ state.tempQtd=v; };
+window.app_setQty=function(v){ state.tempQtd=v; render(); };
 window.app_openItem=function(id){
   var it=findItem(id); if(!it) return;
   state.itemId=id; resetTempForItem(it); state.screen="scan"; render();
@@ -622,8 +660,11 @@ function currentMatch(){
 function renderScanScreen(){
   var it=findItem(state.itemId), p=portaInfo(it.porta);
   var hasReading = !!state.tempReading;
-  var match = hasReading ? currentMatch() : null;
-  var canConfirm = hasReading && (match || state.manualOverride);
+  var artOk = hasReading ? currentMatch() : null;
+  var qtyEntered = qtyEnteredValue();
+  var qtyOk = hasReading && qtyEntered!=null ? qtyMatches(it) : null;
+  var allOk = hasReading && artOk && qtyOk;
+  var canConfirm = hasReading && qtyEntered!=null && (allOk || state.manualOverride);
 
   var h='<div class="hdr">'+
     '<div class="hdr-top">'+
@@ -697,11 +738,32 @@ function renderScanScreen(){
          '<div class="colada-row"><span class="colada-lbl">Colada</span><span class="colada-val num">'+esc(r.colada||'&#8212;')+'</span></div>'+
        '</div>';
 
-    if(match){
-      h+='<div class="verdict ok"><span class="vico">&#10003;</span><div>Perfil, qualidade e comprimento correspondem a esta linha. Colada registada: <b>'+esc(r.colada||'&#8212;')+'</b>. Pode confirmar.</div></div>';
+    /* quantidade efectivamente carregada — o operador confirma/ajusta */
+    var expQ=parseQtd(it.qtd);
+    h+='<div class="qty-block">'+
+         '<label class="qty-lbl">Quantidade carregada</label>'+
+         '<div class="qty-row">'+
+           '<div class="qty-input-wrap"><input type="number" inputmode="decimal" min="0" step="'+(expQ.unit==="un"?"1":"0.1")+'" id="qty-input" value="'+esc(state.tempQtd==null?"":state.tempQtd)+'" oninput="app_setQtyLocal(this.value)" onchange="app_setQty(this.value)"><span class="qty-unit">'+esc(expQ.unit)+'</span></div>'+
+           '<div class="qty-expected">Esperado<br><b>'+esc(it.qtd)+'</b></div>'+
+         '</div>'+
+       '</div>';
+
+    if(allOk){
+      h+='<div class="verdict ok"><span class="vico">&#10003;</span><div>Perfil, qualidade, comprimento e quantidade correspondem a esta linha. Colada registada: <b>'+esc(r.colada||'&#8212;')+'</b>. Pode confirmar.</div></div>';
     } else {
-      h+='<div class="verdict bad"><span class="vico">&#9888;</span><div>Esta etiqueta é de <b>'+esc(r.perfil)+' &middot; '+esc(r.qualidade)+' &middot; '+esc(r.comprimento)+'</b>, mas esta linha precisa de <b>'+esc(it.perfil)+' &middot; '+esc(it.qualidade)+' &middot; '+esc(it.comprimento)+'</b>. Verifique a peça antes de continuar.</div></div>';
-      h+='<label class="verdict-check"><input type="checkbox" '+(state.manualOverride?'checked':'')+' onchange="app_toggleOverride(this.checked)"> Confirmo que verifiquei manualmente e é este material</label>';
+      h+='<div class="verdict bad"><span class="vico">&#9888;</span><div>';
+      if(!artOk){
+        h+='Esta etiqueta é de <b>'+esc(r.perfil)+' &middot; '+esc(r.qualidade)+' &middot; '+esc(r.comprimento)+'</b>, mas esta linha precisa de <b>'+esc(it.perfil)+' &middot; '+esc(it.qualidade)+' &middot; '+esc(it.comprimento)+'</b>. ';
+      }
+      if(qtyEntered==null){
+        h+='Indique a quantidade carregada. ';
+      } else if(qtyOk===false){
+        h+='A quantidade indicada (<b>'+esc(state.tempQtd)+' '+esc(expQ.unit)+'</b>) é diferente da esperada (<b>'+esc(it.qtd)+'</b>). ';
+      }
+      h+='Verifique antes de continuar.</div></div>';
+      if(qtyEntered!=null){
+        h+='<label class="verdict-check"><input type="checkbox" '+(state.manualOverride?'checked':'')+' onchange="app_toggleOverride(this.checked)"> Confirmo que verifiquei manualmente e está correto</label>';
+      }
     }
     h+='</div>';
 
@@ -743,12 +805,14 @@ window.app_toggleOverride=function(v){ state.manualOverride=v; render(); };
 
 window.app_confirmItem=function(){
   var it=findItem(state.itemId); if(!it || !state.tempReading) return;
+  var qtyEntered=qtyEnteredValue(); if(qtyEntered==null) return;
   stopScanner();
   it.estado="confirmado";
   it.foto=state.tempPhoto;
   it.leitura=state.tempReading;
   it.coladaLida=state.tempReading.colada;
-  it.matchOk=currentMatch();
+  it.qtdCarregada=qtyEntered;
+  it.matchOk=currentMatch() && qtyMatches(it);
   it.extraFotos=state.extraPhotos.slice();
   it.confirmadoEm=nowHM();
 
