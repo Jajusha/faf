@@ -817,13 +817,9 @@ window.app_confirmItem=function(){
 
   if(navigator.vibrate){ try{ navigator.vibrate(it.matchOk?20:[15,60,15]); }catch(e){} }
 
-  var arr=itemsForPorta(it.porta), next=null, i;
-  for(i=0;i<arr.length;i++){ if(arr[i].estado!=="confirmado"){ next=arr[i]; break; } }
-
   showToast(it.matchOk ? "Item confirmado" : "Item confirmado com aviso");
 
-  if(next){ resetTempForItem(next); state.itemId=next.id; render(); }
-  else { state.screen="list"; render(); }
+  state.screen="list"; render();
 };
 
 render();
