@@ -135,6 +135,19 @@ button{font-family:inherit;}
 .porta-card.done .porta-count{color:var(--green-600);}
 .porta-chev{font-size:20px;color:var(--border);flex:0 0 auto;}
 
+/* ---------- lista de cargas ---------- */
+.carga-list{display:flex;flex-direction:column;gap:12px;}
+.carga-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);cursor:pointer;width:100%;text-align:left;}
+.carga-card:active{transform:scale(.98);}
+.carga-card.done .carga-ico{background:var(--green-100);color:var(--green-600);}
+.carga-row{display:flex;align-items:flex-start;gap:14px;}
+.carga-ico{width:44px;height:44px;border-radius:12px;background:var(--teal-100);color:var(--teal-600);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;}
+.carga-body{flex:1;min-width:0;}
+.carga-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.carga-idtxt{font-size:16px;font-weight:800;}
+.carga-hora{display:inline-flex;align-items:center;gap:5px;background:var(--amber-100);color:var(--amber-600);font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;flex:0 0 auto;}
+.carga-meta{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.6;}
+
 /* ---------- list screen ---------- */
 .item-list{display:flex;flex-direction:column;gap:10px;}
 .item-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;cursor:pointer;width:100%;text-align:left;}
@@ -317,6 +330,15 @@ var SAMPLE_QR = [
   { label:"Exemplo: Cantoneira 70x7",  text:"S275JR+M\nCANT. 70X7\n12100 mm\nColada 831558" }
 ];
 
+/* diasOffset é relativo ao dia em que a app é aberta (0=hoje, 1=amanhã, ...)
+   — assim a demo mostra sempre "Hoje"/"Amanhã" correctamente, em vez de datas
+   fixas que ficariam erradas passados uns dias. */
+var CARGAS = [
+  { id:"CG-2026/0038", transportador:"Transportes Lima, Lda", horaPrevista:"14:30", diasOffset:0, armazem:"Palmela" },
+  { id:"CG-2026/0041", transportador:"Rodoviária do Ave, Lda", horaPrevista:"16:00", diasOffset:1, armazem:"Amarante" },
+  { id:"CG-2026/0045", transportador:"Cargo Minho, Lda", horaPrevista:"09:00", diasOffset:3, armazem:"Palmela" }
+];
+
 var PORTAS = [
   { id:"A", nome:"Porta A", sub:"Cais Norte" },
   { id:"B", nome:"Porta B", sub:"Cais Sul" },
@@ -328,24 +350,33 @@ var PORTAS = [
    o nome amigável mostrado na UI. Não há colada pré-definida: só se sabe ao
    ler a etiqueta da peça. */
 var ITEMS = [
-  { id:1, porta:"A", ordem:1, artigo:"Viga IPE 200", perfil:"IPE 200", qualidade:"S275JR + M", comprimento:"9100 mm", qtd:"6 un", cliente:"Construções Vale do Ave, Lda", enc:"ENC-2026/0143", destino:"Vila Nova de Famalicão" },
-  { id:2, porta:"A", ordem:2, artigo:"Cantoneira 70x7", perfil:"CANT. 70X7", qualidade:"S275JR + M", comprimento:"12100 mm", qtd:"12 un", cliente:"Construções Vale do Ave, Lda", enc:"ENC-2026/0143", destino:"Vila Nova de Famalicão" },
-  { id:3, porta:"A", ordem:3, artigo:"Barra Chata 40x5", perfil:"BARRA 40X5", qualidade:"S275JR + M", comprimento:"6100 mm", qtd:"20 un", cliente:"Metalomecânica Sousa & Filhos", enc:"ENC-2026/0150", destino:"Guimarães" },
+  { id:1, carga:"CG-2026/0038", porta:"A", ordem:1, artigo:"Viga IPE 200", perfil:"IPE 200", qualidade:"S275JR + M", comprimento:"9100 mm", qtd:"6 un", cliente:"Construções Vale do Ave, Lda", enc:"ENC-2026/0143", destino:"Vila Nova de Famalicão" },
+  { id:2, carga:"CG-2026/0038", porta:"A", ordem:2, artigo:"Cantoneira 70x7", perfil:"CANT. 70X7", qualidade:"S275JR + M", comprimento:"12100 mm", qtd:"12 un", cliente:"Construções Vale do Ave, Lda", enc:"ENC-2026/0143", destino:"Vila Nova de Famalicão" },
+  { id:3, carga:"CG-2026/0038", porta:"A", ordem:3, artigo:"Barra Chata 40x5", perfil:"BARRA 40X5", qualidade:"S275JR + M", comprimento:"6100 mm", qtd:"20 un", cliente:"Metalomecânica Sousa & Filhos", enc:"ENC-2026/0150", destino:"Guimarães" },
 
-  { id:4, porta:"B", ordem:1, artigo:"Tubo 60x60x3", perfil:"TUBO 60X60X3", qualidade:"S235JR", comprimento:"6000 mm", qtd:"30 un", cliente:"Serralharia Central, Lda", enc:"ENC-2026/0151", destino:"Braga" },
-  { id:5, porta:"B", ordem:2, artigo:"Chapa 10 mm", perfil:"CHAPA 10", qualidade:"S355MC", comprimento:"2000x6000 mm", qtd:"800 kg", cliente:"Serralharia Central, Lda", enc:"ENC-2026/0151", destino:"Braga" },
-  { id:6, porta:"B", ordem:3, artigo:"Viga IPE 240", perfil:"IPE 240", qualidade:"S275JR + M", comprimento:"6000 mm", qtd:"4 un", cliente:"Estruturas do Cávado", enc:"ENC-2026/0154", destino:"Barcelos" },
+  { id:4, carga:"CG-2026/0038", porta:"B", ordem:1, artigo:"Tubo 60x60x3", perfil:"TUBO 60X60X3", qualidade:"S235JR", comprimento:"6000 mm", qtd:"30 un", cliente:"Serralharia Central, Lda", enc:"ENC-2026/0151", destino:"Braga" },
+  { id:5, carga:"CG-2026/0038", porta:"B", ordem:2, artigo:"Chapa 10 mm", perfil:"CHAPA 10", qualidade:"S355MC", comprimento:"2000x6000 mm", qtd:"800 kg", cliente:"Serralharia Central, Lda", enc:"ENC-2026/0151", destino:"Braga" },
+  { id:6, carga:"CG-2026/0038", porta:"B", ordem:3, artigo:"Viga IPE 240", perfil:"IPE 240", qualidade:"S275JR + M", comprimento:"6000 mm", qtd:"4 un", cliente:"Estruturas do Cávado", enc:"ENC-2026/0154", destino:"Barcelos" },
 
-  { id:7, porta:"X", ordem:1, artigo:"Varão Ø20", perfil:"VARAO D20", qualidade:"B500B", comprimento:"a corte", qtd:"3000 kg", cliente:"Pré-Fabricados do Minho", enc:"ENC-2026/0155", destino:"Póvoa de Lanhoso" },
-  { id:8, porta:"X", ordem:2, artigo:"Cantoneira 50x50x5", perfil:"CANT. 50X50X5", qualidade:"S275JR", comprimento:"6000 mm", qtd:"10 un", cliente:"Pré-Fabricados do Minho", enc:"ENC-2026/0155", destino:"Póvoa de Lanhoso" },
-  { id:9, porta:"X", ordem:3, artigo:"Tubo 80x80x3", perfil:"TUBO 80X80X3", qualidade:"S275JR", comprimento:"6000 mm", qtd:"15 un", cliente:"Pré-Fabricados do Minho", enc:"ENC-2026/0155", destino:"Póvoa de Lanhoso" }
+  { id:7, carga:"CG-2026/0038", porta:"X", ordem:1, artigo:"Varão Ø20", perfil:"VARAO D20", qualidade:"B500B", comprimento:"a corte", qtd:"3000 kg", cliente:"Pré-Fabricados do Minho", enc:"ENC-2026/0155", destino:"Póvoa de Lanhoso" },
+  { id:8, carga:"CG-2026/0038", porta:"X", ordem:2, artigo:"Cantoneira 50x50x5", perfil:"CANT. 50X50X5", qualidade:"S275JR", comprimento:"6000 mm", qtd:"10 un", cliente:"Pré-Fabricados do Minho", enc:"ENC-2026/0155", destino:"Póvoa de Lanhoso" },
+  { id:9, carga:"CG-2026/0038", porta:"X", ordem:3, artigo:"Tubo 80x80x3", perfil:"TUBO 80X80X3", qualidade:"S275JR", comprimento:"6000 mm", qtd:"15 un", cliente:"Pré-Fabricados do Minho", enc:"ENC-2026/0155", destino:"Póvoa de Lanhoso" },
+
+  { id:10, carga:"CG-2026/0041", porta:"A", ordem:1, artigo:"Chapa 15 mm", perfil:"CHAPA 15", qualidade:"S355MC", comprimento:"2000x6000 mm", qtd:"1200 kg", cliente:"Metalúrgica do Ave, Lda", enc:"ENC-2026/0161", destino:"Vizela" },
+  { id:11, carga:"CG-2026/0041", porta:"B", ordem:1, artigo:"Tubo 100x100x4", perfil:"TUBO 100X100X4", qualidade:"S275JR", comprimento:"6000 mm", qtd:"18 un", cliente:"Metalúrgica do Ave, Lda", enc:"ENC-2026/0161", destino:"Vizela" },
+  { id:12, carga:"CG-2026/0041", porta:"B", ordem:2, artigo:"Varão Ø16", perfil:"VARAO D16", qualidade:"B500B", comprimento:"a corte", qtd:"1800 kg", cliente:"Construções Aveflor, Lda", enc:"ENC-2026/0163", destino:"Santo Tirso" },
+  { id:13, carga:"CG-2026/0041", porta:"X", ordem:1, artigo:"Cantoneira 60x60x6", perfil:"CANT. 60X60X6", qualidade:"S275JR", comprimento:"6000 mm", qtd:"8 un", cliente:"Construções Aveflor, Lda", enc:"ENC-2026/0163", destino:"Santo Tirso" },
+
+  { id:14, carga:"CG-2026/0045", porta:"A", ordem:1, artigo:"Tubo 40x40x3", perfil:"TUBO 40X40X3", qualidade:"S235JR", comprimento:"6000 mm", qtd:"25 un", cliente:"Serralharia Minho Sul, Lda", enc:"ENC-2026/0170", destino:"Ponte de Lima" },
+  { id:15, carga:"CG-2026/0045", porta:"X", ordem:1, artigo:"Chapa 8 mm", perfil:"CHAPA 8", qualidade:"S275JR", comprimento:"2000x6000 mm", qtd:"600 kg", cliente:"Serralharia Minho Sul, Lda", enc:"ENC-2026/0170", destino:"Ponte de Lima" }
 ];
 
 var INITIAL = JSON.parse(JSON.stringify(ITEMS));
 
 /* ---------------- estado ---------------- */
 var state = {
-  screen:"porta",     /* 'porta' | 'list' | 'scan' */
+  screen:"cargas",     /* 'cargas' | 'porta' | 'list' | 'scan' */
+  carga:null,
   porta:null,
   itemId:null,
   tempPhoto:null,
@@ -488,9 +519,21 @@ window.app_rescan=function(){ state.tempReading=null; state.tempPhoto=null; stat
 function $(id){ return document.getElementById(id); }
 function esc(s){ return ("" + (s==null?"":s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function findItem(id){ for(var i=0;i<ITEMS.length;i++){ if(ITEMS[i].id===id) return ITEMS[i]; } return null; }
-function itemsForPorta(pid){ var out=[]; for(var i=0;i<ITEMS.length;i++){ if(ITEMS[i].porta===pid) out.push(ITEMS[i]); } out.sort(function(a,b){return a.ordem-b.ordem;}); return out; }
+function itemsForPorta(pid){ var out=[]; for(var i=0;i<ITEMS.length;i++){ if(ITEMS[i].porta===pid && ITEMS[i].carga===state.carga) out.push(ITEMS[i]); } out.sort(function(a,b){return a.ordem-b.ordem;}); return out; }
 function portaInfo(pid){ for(var i=0;i<PORTAS.length;i++){ if(PORTAS[i].id===pid) return PORTAS[i]; } return null; }
 function progressOf(pid){ var arr=itemsForPorta(pid), done=0,i; for(i=0;i<arr.length;i++){ if(arr[i].estado==="confirmado") done++; } return {done:done, total:arr.length}; }
+function itemsForCarga(cid){ var out=[]; for(var i=0;i<ITEMS.length;i++){ if(ITEMS[i].carga===cid) out.push(ITEMS[i]); } return out; }
+function cargaInfo(cid){ for(var i=0;i<CARGAS.length;i++){ if(CARGAS[i].id===cid) return CARGAS[i]; } return null; }
+function cargaProgress(cid){ var arr=itemsForCarga(cid), done=0,i; for(i=0;i<arr.length;i++){ if(arr[i].estado==="confirmado") done++; } return {done:done, total:arr.length}; }
+function cargaDestinos(cid){ var arr=itemsForCarga(cid), set={}, i; for(i=0;i<arr.length;i++){ set[arr[i].destino]=1; } return Object.keys(set).length; }
+/* "Hoje" / "Amanhã" / dia da semana + data, sempre relativo ao dia em que a
+   app é aberta (nunca uma data fixa que ficaria errada mais tarde). */
+function formatPrevisao(diasOffset){
+  if(diasOffset===0) return "Hoje";
+  if(diasOffset===1) return "Amanhã";
+  var d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+diasOffset);
+  return d.toLocaleDateString("pt-PT",{weekday:"short", day:"2-digit", month:"short"});
+}
 function nowHM(){ var d=new Date(); function p(n){ n=""+n; return n.length<2?"0"+n:n; } return p(d.getHours())+":"+p(d.getMinutes()); }
 
 function showToast(msg){
@@ -501,7 +544,8 @@ function showToast(msg){
 /* ---------------- render dispatcher ---------------- */
 function render(){
   var app=$("app");
-  if(state.screen==="porta"){ stopScanner(); app.innerHTML = renderPortaScreen(); }
+  if(state.screen==="cargas"){ stopScanner(); app.innerHTML = renderCargasScreen(); }
+  else if(state.screen==="porta"){ stopScanner(); app.innerHTML = renderPortaScreen(); }
   else if(state.screen==="list"){ stopScanner(); app.innerHTML = renderListScreen(); }
   else {
     app.innerHTML = renderScanScreen();
@@ -509,8 +553,8 @@ function render(){
   }
 }
 
-/* ---------------- ecrã 1: escolher porta ---------------- */
-function renderPortaScreen(){
+/* ---------------- ecrã 0: escolher carga ---------------- */
+function renderCargasScreen(){
   var totalDone=0, totalAll=ITEMS.length, i;
   for(i=0;i<ITEMS.length;i++){ if(ITEMS[i].estado==="confirmado") totalDone++; }
 
@@ -519,7 +563,55 @@ function renderPortaScreen(){
       '<div class="brand-badge"><img src="'+LOGO_B64+'" alt="FAF produtos siderúrgicos"></div>'+
       '<div class="hdr-titles">'+
         '<div class="hdr-eyebrow">Fase 3 &middot; Preparação</div>'+
-        '<div class="hdr-title">Carga CG-2026/0038</div>'+
+        '<div class="hdr-title">Cargas em preparação</div>'+
+      '</div>'+
+      '<button class="hdr-reset" onclick="app_reset()" title="Repor demonstração">&#8635;</button>'+
+    '</div>'+
+    '<div class="hdr-prog-row">'+
+      '<div class="hdr-prog-track"><div class="hdr-prog-fill" style="width:'+(totalAll?Math.round(totalDone/totalAll*100):0)+'%;"></div></div>'+
+      '<div class="hdr-prog-lbl num">'+totalDone+'/'+totalAll+'</div>'+
+    '</div>'+
+  '</div>';
+  h+='<div class="proto-strip">Protótipo de validação &middot; sem ligação ao PHC</div>';
+
+  h+='<div class="main">';
+  h+='<div class="section-lbl">Escolha a carga a preparar</div>';
+  h+='<div class="carga-list">';
+  for(i=0;i<CARGAS.length;i++){
+    var c=CARGAS[i], pr=cargaProgress(c.id), full=pr.total>0 && pr.done===pr.total, destinos=cargaDestinos(c.id);
+    h+='<button class="carga-card'+(full?' done':'')+'" onclick="app_selectCarga(\''+c.id+'\')">'+
+         '<div class="carga-row">'+
+           '<div class="carga-ico">'+(full?'&#10003;':'&#128666;')+'</div>'+
+           '<div class="carga-body">'+
+             '<div class="carga-top"><span class="carga-idtxt">'+esc(c.id)+'</span><span class="carga-hora">&#128337; '+esc(formatPrevisao(c.diasOffset))+', '+esc(c.horaPrevista)+'</span></div>'+
+             '<div class="carga-meta">'+esc(c.transportador)+'<br>&#127981; '+esc(c.armazem)+' &middot; '+destinos+' destino'+(destinos===1?'':'s')+' &middot; '+pr.total+' linha'+(pr.total===1?'':'s')+'</div>'+
+             '<div class="porta-stat">'+
+               '<div class="porta-bar-track"><div class="porta-bar-fill" style="width:'+(pr.total?Math.round(pr.done/pr.total*100):0)+'%;"></div></div>'+
+               '<div class="porta-count num">'+pr.done+'/'+pr.total+'</div>'+
+             '</div>'+
+           '</div>'+
+           '<div class="porta-chev">&#8250;</div>'+
+         '</div>'+
+       '</button>';
+  }
+  h+='</div></div>';
+  return h;
+}
+window.app_selectCarga=function(cid){ state.carga=cid; state.screen="porta"; render(); };
+
+/* ---------------- ecrã 1: escolher porta ---------------- */
+function renderPortaScreen(){
+  var i;
+  var c=cargaInfo(state.carga);
+  var totalAll=itemsForCarga(state.carga).length, totalDone=cargaProgress(state.carga).done;
+  var destinos=cargaDestinos(state.carga);
+
+  var h ='<div class="hdr">'+
+    '<div class="hdr-top">'+
+      '<button class="hdr-back" onclick="app_backToCargas()">&#8249;</button>'+
+      '<div class="hdr-titles">'+
+        '<div class="hdr-eyebrow">Fase 3 &middot; Preparação</div>'+
+        '<div class="hdr-title">Carga '+esc(c.id)+'</div>'+
       '</div>'+
       '<button class="hdr-reset" onclick="app_reset()" title="Repor demonstração">&#8635;</button>'+
     '</div>'+
@@ -532,9 +624,13 @@ function renderPortaScreen(){
 
   h+='<div class="main">';
   h+='<div class="intro-card">'+
-       '<div class="k">Armazém</div><div class="v">Palmela</div>'+
+       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">'+
+         '<div><div class="k">Armazém</div><div class="v">'+esc(c.armazem)+'</div></div>'+
+         '<span class="carga-hora">&#128337; '+esc(formatPrevisao(c.diasOffset))+', '+esc(c.horaPrevista)+'</span>'+
+       '</div>'+
+       '<div class="k" style="margin-top:10px;">Transportador</div><div class="v">'+esc(c.transportador)+'</div>'+
        '<div class="intro-meta">'+
-         '<div><div class="k">Destinos</div><div class="v">4</div></div>'+
+         '<div><div class="k">Destinos</div><div class="v">'+destinos+'</div></div>'+
          '<div><div class="k">Linhas</div><div class="v">'+totalAll+'</div></div>'+
          '<div><div class="k">Portas</div><div class="v">'+PORTAS.length+'</div></div>'+
        '</div>'+
@@ -561,11 +657,12 @@ function renderPortaScreen(){
 }
 
 window.app_selectPorta=function(pid){ state.porta=pid; state.screen="list"; render(); };
+window.app_backToCargas=function(){ state.screen="cargas"; state.carga=null; render(); };
 window.app_reset=function(){
   if(!confirm("Repor a demonstração? Todos os itens voltam a 'pendente'.")) return;
   stopScanner();
   ITEMS = JSON.parse(JSON.stringify(INITIAL));
-  state = { screen:"porta", porta:null, itemId:null, tempPhoto:null, tempReading:null, extraPhotos:[], manualOverride:false, scanError:null, showSamples:false };
+  state = { screen:"cargas", carga:null, porta:null, itemId:null, tempPhoto:null, tempReading:null, tempQtd:null, extraPhotos:[], manualOverride:false, scanError:null, showSamples:false };
   render();
 };
 
